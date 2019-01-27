@@ -55,6 +55,13 @@ class Cart
     protected $sessionKeyCartConditions;
 
     /**
+     * the session key use to persist cart conditions
+     *
+     * @var
+     */
+    protected $sessionKeyTaxes;
+
+    /**
      * Configuration to pass to ItemCollection
      *
      * @var
@@ -91,7 +98,7 @@ class Cart
      */
     public function session($sessionKey)
     {
-        if(!$sessionKey) throw new \Exception("Session key is required.");
+        if (!$sessionKey) throw new \Exception("Session key is required.");
 
         $this->sessionKey = $sessionKey;
         $this->sessionKeyCartItems = $this->sessionKey . '_cart_items';
@@ -140,11 +147,11 @@ class Cart
      * @param float $price
      * @param int $quantity
      * @param array $attributes
-     * @param CartCondition|array $conditions
+     * @param Tax|array $conditions
      * @return $this
      * @throws InvalidItemException
      */
-    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array())
+    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array())
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -159,7 +166,8 @@ class Cart
                         $item['price'],
                         $item['quantity'],
                         Helpers::issetAndHasValueOrAssignDefault($item['attributes'], array()),
-                        Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array())
+                        Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array()),
+                        Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array())
                     );
                 }
             } else {
@@ -169,7 +177,8 @@ class Cart
                     $id['price'],
                     $id['quantity'],
                     Helpers::issetAndHasValueOrAssignDefault($id['attributes'], array()),
-                    Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array())
+                    Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array()),
+                    Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array())
                 );
             }
 
@@ -184,6 +193,7 @@ class Cart
             'quantity' => $quantity,
             'attributes' => new ItemAttributeCollection($attributes),
             'conditions' => $conditions,
+            'taxes' => $taxes
         ));
 
         // get the cart
@@ -214,7 +224,7 @@ class Cart
      */
     public function update($id, $data)
     {
-        if($this->fireEvent('updating', $data) === false) {
+        if ($this->fireEvent('updating', $data) === false) {
             return false;
         }
 
@@ -262,7 +272,7 @@ class Cart
      * add condition on an existing item on the cart
      *
      * @param int|string $productId
-     * @param CartCondition $itemCondition
+     * @param Tax $itemCondition
      * @return $this
      */
     public function addItemCondition($productId, $itemCondition)
@@ -293,6 +303,40 @@ class Cart
     }
 
     /**
+     * add tax on an existing item on the cart
+     *
+     * @param int|string $productId
+     * @param Tax $tax
+     * @return $this
+     */
+    public function addItemTax($productId, $tax)
+    {
+        if ($product = $this->get($productId)) {
+            $taxInstance = "\\Darryldecode\\Cart\\Tax";
+
+            if ($tax instanceof $taxInstance) {
+                // we need to copy first to a temporary variable to hold the conditions
+                // to avoid hitting this error "Indirect modification of overloaded element of Darryldecode\Cart\ItemCollection has no effect"
+                // this is due to laravel Collection instance that implements Array Access
+                // // see link for more info: http://stackoverflow.com/questions/20053269/indirect-modification-of-overloaded-element-of-splfixedarray-has-no-effect
+                $itemTaxTempHolder = $product['taxes'];
+
+                if (is_array($itemTaxTempHolder)) {
+                    array_push($itemTaxTempHolder, $tax);
+                } else {
+                    $itemTaxTempHolder = $tax;
+                }
+
+                $this->update($productId, array(
+                    'taxes' => $itemTaxTempHolder // the newly updated conditions
+                ));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * removes an item on cart by item ID
      *
      * @param $id
@@ -302,7 +346,7 @@ class Cart
     {
         $cart = $this->getContent();
 
-        if($this->fireEvent('removing', $id) === false) {
+        if ($this->fireEvent('removing', $id) === false) {
             return false;
         }
 
@@ -320,7 +364,7 @@ class Cart
      */
     public function clear()
     {
-        if($this->fireEvent('clearing') === false) {
+        if ($this->fireEvent('clearing') === false) {
             return false;
         }
 
@@ -336,7 +380,7 @@ class Cart
     /**
      * add a condition on the cart
      *
-     * @param CartCondition|array $condition
+     * @param Tax|array $condition
      * @return $this
      * @throws InvalidConditionException
      */
@@ -372,6 +416,44 @@ class Cart
     }
 
     /**
+     * add a condition on the cart
+     *
+     * @param $tax
+     * @return $this
+     * @throws InvalidConditionException
+     */
+    public function tax($tax)
+    {
+        if (is_array($tax)) {
+            foreach ($tax as $c) {
+                $this->tax($c);
+            }
+
+            return $this;
+        }
+
+        if (!$tax instanceof Tax) throw new InvalidConditionException('Argument 1 must be an instance of \'Darryldecode\Cart\Tax\'');
+
+        $taxes = $this->getTaxes();
+
+        // Check if order has been applied
+        if ($tax->getOrder() == 0) {
+            $last = $taxes->last();
+            $tax->setOrder(!is_null($last) ? $last->getOrder() + 1 : 1);
+        }
+
+        $taxes->put($tax->getName(), $tax);
+
+        $taxes = $taxes->sortBy(function ($tax, $key) {
+            return $tax->getOrder();
+        });
+
+        $this->saveTaxes($taxes);
+
+        return $this;
+    }
+
+    /**
      * get conditions applied on the cart
      *
      * @return CartConditionCollection
@@ -382,14 +464,35 @@ class Cart
     }
 
     /**
+     * get taxes applied on the cart
+     *
+     * @return CartConditionCollection
+     */
+    public function getTaxes()
+    {
+        return new CartConditionCollection($this->session->get($this->sessionKeyTaxes));
+    }
+
+    /**
      * get condition applied on the cart by its name
      *
      * @param $conditionName
-     * @return CartCondition
+     * @return Tax
      */
     public function getCondition($conditionName)
     {
         return $this->getConditions()->get($conditionName);
+    }
+
+    /**
+     * get condition applied on the cart by its name
+     *
+     * @param $taxName
+     * @return Tax
+     */
+    public function getTax($taxName)
+    {
+        return $this->getTaxes()->get($taxName);
     }
 
     /**
@@ -407,6 +510,20 @@ class Cart
         });
     }
 
+    /**
+     * Get all the taxes filtered by Type
+     * Please Note that this will only return taxes added on cart bases, not those taxes added
+     * specifically on an per item bases
+     *
+     * @param $type
+     * @return CartConditionCollection
+     */
+    public function getTaxesByType($type)
+    {
+        return $this->getTaxes()->filter(function (Tax $tax) use ($type) {
+            return $tax->getType() == $type;
+        });
+    }
 
     /**
      * Remove all the condition with the $type specified
@@ -414,7 +531,7 @@ class Cart
      * specifically on an per item bases
      *
      * @param $type
-     * @return $this
+     * @return void
      */
     public function removeConditionsByType($type)
     {
@@ -423,6 +540,20 @@ class Cart
         });
     }
 
+    /**
+     * Remove all the condition with the $type specified
+     * Please Note that this will only remove condition added on cart bases, not those conditions added
+     * specifically on an per item bases
+     *
+     * @param $type
+     * @return void
+     */
+    public function removeTaxesByType($type)
+    {
+        $this->getTaxesByType($type)->each(function ($tax) {
+            $this->removeTax($tax->getName());
+        });
+    }
 
     /**
      * removes a condition on a cart by condition name,
@@ -440,6 +571,22 @@ class Cart
         $conditions->pull($conditionName);
 
         $this->saveConditions($conditions);
+    }
+
+    /**
+     * removes a tax on a cart by tax name,
+     * this can only remove taxes that are added on cart bases not taxes that are added on an item/product.
+     *
+     * @param $taxName
+     * @return void
+     */
+    public function removeTax($taxName)
+    {
+        $taxes = $this->getTaxes();
+
+        $taxes->pull($taxName);
+
+        $this->saveTaxes($taxes);
     }
 
     /**
@@ -501,6 +648,64 @@ class Cart
     }
 
     /**
+     * remove a condition that has been applied on an item that is already on the cart
+     *
+     * @param $itemId
+     * @param $taxtName
+     * @return bool
+     */
+    public function removeItemTax($itemId, $taxtName)
+    {
+        if (!$item = $this->getContent()->get($itemId)) {
+            return false;
+        }
+
+        if ($this->itemHasTaxes($item)) {
+            // NOTE:
+            // we do it this way, we get first taxes and store
+            // it in a temp variable $originalConditions, then we will modify the array there
+            // and after modification we will store it again on $item['conditions']
+            // This is because of ArrayAccess implementation
+            // see link for more info: http://stackoverflow.com/questions/20053269/indirect-modification-of-overloaded-element-of-splfixedarray-has-no-effect
+
+            $tempTaxesHolder = $item['taxes'];
+
+            // if the item's conditions is in array format
+            // we will iterate through all of it and check if the name matches
+            // to the given name the user wants to remove, if so, remove it
+            if (is_array($tempTaxesHolder)) {
+                foreach ($tempTaxesHolder as $k => $condition) {
+                    if ($condition->getName() == $taxtName) {
+                        unset($tempTaxesHolder[$k]);
+                    }
+                }
+
+                $item['taxes'] = $tempTaxesHolder;
+            }
+
+            // if the item condition is not an array, we will check if it is
+            // an instance of a Condition, if so, we will check if the name matches
+            // on the given condition name the user wants to remove, if so,
+            // lets just make $item['conditions'] an empty array as there's just 1 condition on it anyway
+            else {
+                $taxInstance = "Darryldecode\\Cart\\Tax";
+
+                if ($item['taxes'] instanceof $taxInstance) {
+                    if ($tempTaxesHolder->getName() == $taxtName) {
+                        $item['taxes'] = array();
+                    }
+                }
+            }
+        }
+
+        $this->update($itemId, array(
+            'taxes' => $item['taxes']
+        ));
+
+        return true;
+    }
+
+    /**
      * remove all conditions that has been applied on an item that is already on the cart
      *
      * @param $itemId
@@ -514,6 +719,25 @@ class Cart
 
         $this->update($itemId, array(
             'conditions' => array()
+        ));
+
+        return true;
+    }
+
+    /**
+     * remove all conditions that has been applied on an item that is already on the cart
+     *
+     * @param $itemId
+     * @return bool
+     */
+    public function clearItemTaxes($itemId)
+    {
+        if (!$item = $this->getContent()->get($itemId)) {
+            return false;
+        }
+
+        $this->update($itemId, array(
+            'taxes' => array()
         ));
 
         return true;
@@ -535,6 +759,21 @@ class Cart
     }
 
     /**
+     * clears all conditions on a cart,
+     * this does not remove conditions that has been added specifically to an item/product.
+     * If you wish to remove a specific condition to a product, you may use the method: removeItemCondition($itemId, $conditionName)
+     *
+     * @return void
+     */
+    public function clearTaxes()
+    {
+        $this->session->put(
+            $this->sessionKeyTaxes,
+            array()
+        );
+    }
+
+    /**
      * get cart sub total without conditions
      * @param bool $formatted
      * @return float
@@ -548,8 +787,8 @@ class Cart
         });
 
         return Helpers::formatValue(floatval($sum), $formatted, $this->config);
-    }    
-    
+    }
+
     /**
      * get cart sub total
      * @param bool $formatted
@@ -571,23 +810,42 @@ class Cart
                 return $cond->getTarget() === 'subtotal';
             });
 
+        $taxes = $this
+            ->getTaxes()
+            ->filter(function (Tax $cond) {
+                return $cond->getTarget() === 'subtotal';
+            });
+
         // if there is no conditions, lets just return the sum
-        if(!$conditions->count()) return Helpers::formatValue(floatval($sum), $formatted, $this->config);
+        if (!$conditions->count() && !$taxes->count()) return Helpers::formatValue(floatval($sum), $formatted, $this->config);
 
         // there are conditions, lets apply it
         $newTotal = 0.00;
         $process = 0;
 
-        $conditions->each(function (CartCondition $cond) use ($sum, &$newTotal, &$process) {
+        if ($conditions->count())
+            $conditions->each(function (CartCondition $cond) use ($sum, &$newTotal, &$process) {
 
-            // if this is the first iteration, the toBeCalculated
-            // should be the sum as initial point of value.
-            $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
 
-            $newTotal = $cond->applyCondition($toBeCalculated);
+                $newTotal = $cond->applyCondition($toBeCalculated);
 
-            $process++;
-        });
+                $process++;
+            });
+
+        if ($taxes->count())
+            $taxes->each(function (Tax $tax) use ($sum, &$newTotal, &$process) {
+
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+
+                $newTotal = $tax->applyCondition($toBeCalculated);
+
+                $process++;
+            });
 
         return Helpers::formatValue(floatval($newTotal), $formatted, $this->config);
     }
@@ -611,20 +869,38 @@ class Cart
                 return $cond->getTarget() === 'total';
             });
 
+        $taxes = $this
+            ->getTaxes()
+            ->filter(function (Tax $tax) {
+                return $tax->getTarget() === 'total';
+            });
+
         // if no conditions were added, just return the sub total
-        if (!$conditions->count()) {
+        if (!$conditions->count() && !$taxes->count()) {
             return Helpers::formatValue($subTotal, $this->config['format_numbers'], $this->config);
         }
 
-        $conditions
-            ->each(function (CartCondition $cond) use ($subTotal, &$newTotal, &$process) {
-                $toBeCalculated = ($process > 0) ? $newTotal : $subTotal;
+        if ($conditions->count())
+            $conditions
+                ->each(function (CartCondition $cond) use ($subTotal, &$newTotal, &$process) {
+                    $toBeCalculated = ($process > 0) ? $newTotal : $subTotal;
 
-                $newTotal = $cond->applyCondition($toBeCalculated);
+                    $newTotal = $cond->applyCondition($toBeCalculated);
 
-                $process++;
+                    $process++;
 
-            });
+                });
+
+        if ($taxes->count())
+            $taxes
+                ->each(function (Tax $tax) use ($subTotal, &$newTotal, &$process) {
+                    $toBeCalculated = ($process > 0) ? $newTotal : $subTotal;
+
+                    $newTotal = $tax->applyCondition($toBeCalculated);
+
+                    $process++;
+
+                });
 
         return Helpers::formatValue($newTotal, $this->config['format_numbers'], $this->config);
     }
@@ -703,7 +979,7 @@ class Cart
      */
     protected function addRow($id, $item)
     {
-        if($this->fireEvent('adding', $item) === false) {
+        if ($this->fireEvent('adding', $item) === false) {
             return false;
         }
 
@@ -739,6 +1015,16 @@ class Cart
     }
 
     /**
+     * save the taxes
+     *
+     * @param $taxes
+     */
+    protected function saveTaxes($taxes)
+    {
+        $this->session->put($this->sessionKeyTaxes, $taxes);
+    }
+
+    /**
      * check if an item has condition
      *
      * @param $item
@@ -755,6 +1041,21 @@ class Cart
         $conditionInstance = "Darryldecode\\Cart\\CartCondition";
 
         if ($item['conditions'] instanceof $conditionInstance) return true;
+
+        return false;
+    }
+
+    protected function itemHasTaxes($item)
+    {
+        if (!isset($item['taxes'])) return false;
+
+        if (is_array($item['taxes'])) {
+            return count($item['taxes']) > 0;
+        }
+
+        $taxInstance = "Darryldecode\\Cart\\Tax";
+
+        if ($item['taxes'] instanceof $taxInstance) return true;
 
         return false;
     }

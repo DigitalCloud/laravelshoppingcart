@@ -68,7 +68,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function test_item_get_conditions_with_conditions()
     {
-        $itemCondition1 = new \Darryldecode\Cart\CartCondition(array(
+        $itemCondition1 = new CartCondition(array(
             'name' => 'SALE 5%',
             'type' => 'sale',
             'target' => 'item',

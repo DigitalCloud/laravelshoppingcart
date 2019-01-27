@@ -7,7 +7,6 @@
  */
 
 use Darryldecode\Cart\Cart;
-use Darryldecode\Cart\CartCondition;
 use Mockery as m;
 
 require_once __DIR__ . '/../helpers/SessionMock.php';
@@ -46,7 +45,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(501.75, $this->cart->getSubTotal());
 
         // add condition to subtotal
-        $condition = new CartCondition(array(
+        $condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Special Discount',
             'type' => 'discount',
             'value' => '-5',
@@ -75,7 +74,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal());
 
         // add condition to subtotal
-        $condition = new CartCondition(array(
+        $condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Special Discount',
             'type' => 'discount',
             'value' => '-5',
@@ -92,7 +91,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $manualComputedCartTotalAfterNewItem = $manualComputedCartTotal + (100 - 5);
         $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal());
 
-        $sub_condition = new CartCondition(array(
+        $sub_condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Total Discount',
             'type' => 'discount',
             'target' => 'subtotal',
@@ -115,7 +114,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal());
 
         // add condition to subtotal
-        $condition = new CartCondition(array(
+        $condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Special Discount',
             'type' => 'discount',
             'value' => '-5',
@@ -134,7 +133,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal());
         $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getTotal());
 
-        $total_condition = new CartCondition(array(
+        $total_condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Total Discount',
             'type' => 'discount',
             'target' => 'total',

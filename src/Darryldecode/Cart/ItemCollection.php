@@ -10,7 +10,8 @@
 use Darryldecode\Cart\Helpers\Helpers;
 use Illuminate\Support\Collection;
 
-class ItemCollection extends Collection {
+class ItemCollection extends Collection
+{
 
     /**
      * Sets the config parameters.
@@ -44,7 +45,7 @@ class ItemCollection extends Collection {
 
     public function __get($name)
     {
-        if( $this->has($name) ) return $this->get($name);
+        if ($this->has($name)) return $this->get($name);
         return null;
     }
 
@@ -55,13 +56,29 @@ class ItemCollection extends Collection {
      */
     public function hasConditions()
     {
-        if( ! isset($this['conditions']) ) return false;
-        if( is_array($this['conditions']) )
-        {
+        if (!isset($this['conditions'])) return false;
+        if (is_array($this['conditions'])) {
             return count($this['conditions']) > 0;
         }
         $conditionInstance = "Darryldecode\\Cart\\CartCondition";
-        if( $this['conditions'] instanceof $conditionInstance ) return true;
+        if ($this['conditions'] instanceof $conditionInstance) return true;
+
+        return false;
+    }
+
+    /**
+     * check if item has taxes
+     *
+     * @return bool
+     */
+    public function hasTaxes()
+    {
+        if (!isset($this['taxes'])) return false;
+        if (is_array($this['taxes'])) {
+            return count($this['taxes']) > 0;
+        }
+        $taxInstance = "Darryldecode\\Cart\\Tax";
+        if ($this['taxes'] instanceof $taxInstance) return true;
 
         return false;
     }
@@ -73,8 +90,19 @@ class ItemCollection extends Collection {
      */
     public function getConditions()
     {
-        if(! $this->hasConditions() ) return [];
+        if (!$this->hasConditions()) return [];
         return $this['conditions'];
+    }
+
+    /**
+     * check if item has taxes
+     *
+     * @return mixed|null
+     */
+    public function getTaxes()
+    {
+        if (!$this->hasTaxes()) return [];
+        return $this['taxes'];
     }
 
     /**
@@ -84,29 +112,34 @@ class ItemCollection extends Collection {
      */
     public function getPriceWithConditions($formatted = true)
     {
-        $originalPrice = $this->price;
-        $newPrice = 0.00;
+        $originalPrice = $newPrice = $this->price;
         $processed = 0;
-
-        if( $this->hasConditions() )
-        {
-            if( is_array($this->conditions) )
-            {
-                foreach($this->conditions as $condition)
-                {
-                    ( $processed > 0 ) ? $toBeCalculated = $newPrice : $toBeCalculated = $originalPrice;
-                    $newPrice = $condition->applyCondition($toBeCalculated);
+        if ($this->hasConditions()) {
+            if (is_array($this->conditions)) {
+                foreach ($this->conditions as $tax) {
+                    ($processed > 0) ? $toBeCalculated = $newPrice : $toBeCalculated = $originalPrice;
+                    $newPrice = $tax->applyCondition($toBeCalculated);
                     $processed++;
                 }
-            }
-            else
-            {
+            } else {
                 $newPrice = $this['conditions']->applyCondition($originalPrice);
             }
-
-            return Helpers::formatValue($newPrice, $formatted, $this->config);
         }
-        return Helpers::formatValue($originalPrice, $formatted, $this->config);
+
+        if ($this->hasTaxes()) {
+            if (is_array($this->taxes)) {
+                $processed = 0;
+                foreach ($this->taxes as $tax) {
+                    $toBeCalculated = $newPrice;
+                    $newPrice = $tax->applyCondition($toBeCalculated);
+                    $processed++;
+                }
+            } else {
+                $newPrice = $this['taxes']->applyCondition($originalPrice);
+            }
+        }
+
+        return Helpers::formatValue($newPrice, $formatted, $this->config);
     }
 
     /**
