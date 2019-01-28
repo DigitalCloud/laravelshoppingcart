@@ -1,6 +1,7 @@
 <?php namespace Darryldecode\Cart;
 
 use Darryldecode\Cart\Exceptions\InvalidConditionException;
+use Darryldecode\Cart\Exceptions\InvalidGroup;
 use Darryldecode\Cart\Exceptions\InvalidItemException;
 use Darryldecode\Cart\Helpers\Helpers;
 use Darryldecode\Cart\Validators\CartItemValidator;
@@ -191,6 +192,71 @@ class Cart
             'name' => $name,
             'price' => Helpers::normalizePrice($price),
             'quantity' => $quantity,
+            'attributes' => new ItemAttributeCollection($attributes),
+            'conditions' => $conditions,
+            'taxes' => $taxes
+        ));
+
+        // get the cart
+        $cart = $this->getContent();
+
+        // if the item is already in the cart we will just update it
+        if ($cart->has($id)) {
+
+            $this->update($id, $item);
+        } else {
+
+            $this->addRow($id, $item);
+
+        }
+
+        return $this;
+    }
+
+    /**
+     * add item to the cart, it can be an array or multi dimensional array
+     *
+     * @param string|array $id
+     * @param string $name
+     * @param array $attributes
+     * @param Tax|array $conditions
+     * @return $this
+     * @throws InvalidItemException
+     */
+    public function addGroup($id, $name = null, $attributes = array(), $conditions = array(), $taxes = array())
+    {
+        // if the first argument is an array,
+        // we will need to call add again
+        if (is_array($id)) {
+            // the first argument is an array, now we will need to check if it is a multi dimensional
+            // array, if so, we will iterate through each item and call add again
+            if (Helpers::isMultiArray($id)) {
+                foreach ($id as $item) {
+                    $this->addGroup(
+                        $item['id'],
+                        $item['name'],
+                        Helpers::issetAndHasValueOrAssignDefault($item['attributes'], array()),
+                        Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array()),
+                        Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array())
+                    );
+                }
+            } else {
+                $this->addGroup(
+                    $id['id'],
+                    $id['name'],
+                    Helpers::issetAndHasValueOrAssignDefault($id['attributes'], array()),
+                    Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array()),
+                    Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array())
+                );
+            }
+
+            return $this;
+        }
+
+        // validate data
+        $item = $this->validateGroup(array(
+            'id' => $id,
+            'name' => $name,
             'attributes' => new ItemAttributeCollection($attributes),
             'conditions' => $conditions,
             'taxes' => $taxes
@@ -853,6 +919,69 @@ class Cart
     }
 
     /**
+     * get cart sub total
+     * @param bool $formatted
+     * @return float
+     */
+    public function getGroupSubTotal($id, $formatted = true)
+    {
+        $cart = $this->getContent()->filter(function ($value, $key) use ($id) {
+            return $value->attributes->group_id == $id;
+        });
+
+        $sum = $cart->sum(function (ItemCollection $item) {
+            return $item->getPriceSumWithConditions(false);
+        });
+
+        // get the conditions that are meant to be applied
+        // on the subtotal and apply it here before returning the subtotal
+        $conditions = $this
+            ->getConditions()
+            ->filter(function (CartCondition $cond) {
+                return $cond->getTarget() === 'subtotal';
+            });
+
+        $taxes = $this
+            ->getTaxes()
+            ->filter(function (Tax $cond) {
+                return $cond->getTarget() === 'subtotal';
+            });
+
+        // if there is no conditions, lets just return the sum
+        if (!$conditions->count() && !$taxes->count()) return Helpers::formatValue(floatval($sum), $formatted, $this->config);
+
+        // there are conditions, lets apply it
+        $newTotal = 0.00;
+        $process = 0;
+
+        if ($conditions->count())
+            $conditions->each(function (CartCondition $cond) use ($sum, &$newTotal, &$process) {
+
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+
+                $newTotal = $cond->applyCondition($toBeCalculated);
+
+                $process++;
+            });
+
+        if ($taxes->count())
+            $taxes->each(function (Tax $tax) use ($sum, &$newTotal, &$process) {
+
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+
+                $newTotal = $tax->applyCondition($toBeCalculated);
+
+                $process++;
+            });
+
+        return Helpers::formatValue(floatval($newTotal), $formatted, $this->config);
+    }
+
+    /**
      * the new total in which conditions are already applied
      *
      * @return float
@@ -919,7 +1048,7 @@ class Cart
         if ($items->isEmpty()) return 0;
 
         $count = $items->sum(function ($item) {
-            return $item['quantity'];
+            return isset($item['quantity'])?$item['quantity']:0;
         });
 
         return $count;
@@ -944,7 +1073,9 @@ class Cart
     {
         $cart = new CartCollection($this->session->get($this->sessionKeyCartItems));
 
-        return $cart->isEmpty();
+        return $cart->filter(function ($value, $key) {
+                return $value->price;
+            })->count() == 0;
     }
 
     /**
@@ -952,14 +1083,40 @@ class Cart
      *
      * @param $item
      * @return array $item;
+     * @throws InvalidGroup
      * @throws InvalidItemException
      */
     protected function validate($item)
     {
+        $item['attributes'] = $item['attributes']->toArray();
+        $group_ids = $this->getContent()->filter(function ($value, $key) {
+            return !$value->quantity;
+        })->pluck('id')->toArray();
+
         $rules = array(
             'id' => 'required',
             'price' => 'required|numeric',
             'quantity' => 'required|numeric|min:1',
+            'name' => 'required',
+            'attributes.group_id' => 'nullable|in:' . implode(',', $group_ids)
+        );
+
+        $validator = CartItemValidator::make($item, $rules);
+
+        $item['attributes'] = new ItemAttributeCollection($item['attributes']);
+        if ($validator->fails()) {
+            if ($validator->errors()->get('attributes.group_id'))
+                throw new InvalidGroup($validator->messages()->first());
+            throw new InvalidItemException($validator->messages()->first());
+        }
+
+        return $item;
+    }
+
+    protected function validateGroup($item)
+    {
+        $rules = array(
+            'id' => 'required',
             'name' => 'required',
         );
 
