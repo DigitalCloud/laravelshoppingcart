@@ -253,6 +253,8 @@ class Cart
                 } else {
                     $item = $this->updateQuantityRelative($item, $key, $value);
                 }
+
+                $this->fireEvent('quantityUpdated', $data);
             } elseif ($key == 'attributes') {
                 $item[$key] = new ItemAttributeCollection($value);
             } else {
