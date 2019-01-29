@@ -42,7 +42,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
     {
         $this->fillCart();
 
-        $this->assertEquals(501.75, $this->cart->getSubTotal());
+        $this->assertEquals(501.75, $this->cart->getSubTotal()->get('value'));
 
         // add condition to subtotal
         $condition = new \Darryldecode\Cart\CartCondition(array(
@@ -59,11 +59,11 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
             'conditions' => $condition
         ]);
 
-        $this->assertEquals(501.75 + (100 - 5), $this->cart->getSubTotal());
+        $this->assertEquals(501.75 + (100 - 5), $this->cart->getSubTotal()->get('value'));
 
         // the total is also should be the same with sub total since our getTotal
         // also depends on what is the value of subtotal
-        $this->assertEquals(501.75 + (100 - 5), $this->cart->getTotal());
+        $this->assertEquals(501.75 + (100 - 5), $this->cart->getTotal()->get('value'));
     }
 
     public function test_subtotal_with_discount_and_items_discount()
@@ -71,7 +71,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->fillCart();
         $manualComputedCartTotal = 501.75;
 
-        $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal());
+        $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal()->get('value'));
 
         // add condition to subtotal
         $condition = new \Darryldecode\Cart\CartCondition(array(
@@ -89,7 +89,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         ]);
 
         $manualComputedCartTotalAfterNewItem = $manualComputedCartTotal + (100 - 5);
-        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal()->get('value'));
 
         $sub_condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Total Discount',
@@ -100,10 +100,10 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
 
         $this->cart->condition($sub_condition);
 
-        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getSubTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getSubTotal()->get('value'));
         // the total is also should be the same with sub total since our getTotal
         // also depends on what is the value of subtotal
-        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getTotal()->get('value'));
     }
 
     public function test_total_with_discount_and_items_discount()
@@ -111,7 +111,7 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
         $this->fillCart();
         $manualComputedCartTotal = 501.75;
 
-        $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal());
+        $this->assertEquals($manualComputedCartTotal, $this->cart->getSubTotal()->get('value'));
 
         // add condition to subtotal
         $condition = new \Darryldecode\Cart\CartCondition(array(
@@ -130,8 +130,8 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
 
         $manualComputedCartTotalAfterNewItem = $manualComputedCartTotal + (100 - 5);
 
-        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal());
-        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal()->get('value'));
+        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getTotal()->get('value'));
 
         $total_condition = new \Darryldecode\Cart\CartCondition(array(
             'name' => 'Total Discount',
@@ -142,10 +142,10 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
 
         $this->cart->condition($total_condition);
 
-        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem, $this->cart->getSubTotal()->get('value'));
         // the total is also should be the same with sub total since our getTotal
         // also depends on what is the value of subtotal
-        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getTotal());
+        $this->assertEquals($manualComputedCartTotalAfterNewItem - (10 / 100 * $manualComputedCartTotalAfterNewItem), $this->cart->getTotal()->get('value'));
     }
 
     protected function fillCart()

@@ -212,9 +212,9 @@ class GroupTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 118.24');
+        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 118.24');
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
     }
 
     public function test_group_sub_total_when_sub_item_price_is_updated()
@@ -257,13 +257,13 @@ class GroupTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 118.24');
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 118.24');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         $this->cart->update(456, ['price' => 59.99]);
 
-        $this->assertEquals(110.24, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 110.24');
-        $this->assertEquals(179.49, $this->cart->getSubTotal(), 'Cart should have sub total of 179.49');
+        $this->assertEquals(110.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 110.24');
+        $this->assertEquals(179.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 179.49');
     }
 
     public function test_group_sub_total_when_sub_item_quantity_is_updated()
@@ -306,13 +306,13 @@ class GroupTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 118.24');
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 118.24');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         $this->cart->update(456, ['quantity' => 1]);
 
-        $this->assertEquals(186.23, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 186.23');
-        $this->assertEquals(255.48, $this->cart->getSubTotal(), 'Cart should have sub total of 255.48');
+        $this->assertEquals(186.23, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 186.23');
+        $this->assertEquals(255.48, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 255.48');
     }
 
     public function test_group_sub_total_when_new_sub_item_added_to_group()
@@ -348,7 +348,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 118.24');
+        $this->assertEquals(118.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 118.24');
 
         $this->cart->add(array(
                 'id' => 568,
@@ -361,7 +361,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
             )
         );
 
-        $this->assertEquals(187.49, $this->cart->getGroupSubTotal(1), 'Group should have sub total of 110.24');
+        $this->assertEquals(187.49, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 110.24');
     }
 
 

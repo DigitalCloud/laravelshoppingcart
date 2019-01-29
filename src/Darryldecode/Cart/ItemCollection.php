@@ -117,9 +117,9 @@ class ItemCollection extends Collection
         $processed = 0;
         if ($this->hasConditions()) {
             if (is_array($this->conditions)) {
-                foreach ($this->conditions as $tax) {
+                foreach ($this->conditions as $cond) {
                     ($processed > 0) ? $toBeCalculated = $newPrice : $toBeCalculated = $originalPrice;
-                    $newPrice = $tax->applyCondition($toBeCalculated);
+                    $newPrice = $cond->applyCondition($toBeCalculated);
                     $processed++;
                 }
             } else {
@@ -151,5 +151,10 @@ class ItemCollection extends Collection
     public function getPriceSumWithConditions($formatted = true)
     {
         return Helpers::formatValue($this->getPriceWithConditions(false) * $this->quantity, $formatted, $this->config);
+    }
+
+    public function isOption()
+    {
+        return $this->attributes->is_optional;
     }
 }

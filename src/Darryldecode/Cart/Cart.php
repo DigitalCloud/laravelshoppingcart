@@ -866,8 +866,12 @@ class Cart
     {
         $cart = $this->getContent();
 
-        $sum = $cart->sum(function (ItemCollection $item) {
+        $max = $cart->sum(function (ItemCollection $item) {
             return $item->getPriceSumWithConditions(false);
+        });
+
+        $min = $cart->sum(function (ItemCollection $item) {
+            return $item->isOption() ? 0 : $item->getPriceSumWithConditions(false);
         });
 
         // get the conditions that are meant to be applied
@@ -885,37 +889,46 @@ class Cart
             });
 
         // if there is no conditions, lets just return the sum
-        if (!$conditions->count() && !$taxes->count()) return Helpers::formatValue(floatval($sum), $formatted, $this->config);
+        if (!$conditions->count() && !$taxes->count())
+            return collect([
+                'value' => $min == $max ? Helpers::formatValue(floatval($min), $formatted, $this->config) : null,
+                'max' => Helpers::formatValue(floatval($max), $formatted, $this->config),
+                'min' => Helpers::formatValue(floatval($min), $formatted, $this->config)
+            ]);
 
         // there are conditions, lets apply it
-        $newTotal = 0.00;
-        $process = 0;
+        $newMax = $max;
+        $newMin = $min;
 
         if ($conditions->count())
-            $conditions->each(function (CartCondition $cond) use ($sum, &$newTotal, &$process) {
+            $conditions->each(function (CartCondition $cond) use (&$newMax, &$newMin) {
 
                 // if this is the first iteration, the toBeCalculated
                 // should be the sum as initial point of value.
-                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+                $toBeCalculatedMax = $newMax;
+                $newMax = $cond->applyCondition($toBeCalculatedMax);
 
-                $newTotal = $cond->applyCondition($toBeCalculated);
-
-                $process++;
+                $toBeCalculatedMin = $newMin;
+                $newMin = $cond->applyCondition($toBeCalculatedMin);
             });
 
         if ($taxes->count())
-            $taxes->each(function (Tax $tax) use ($sum, &$newTotal, &$process) {
+            $taxes->each(function (Tax $tax) use (&$newMax, &$newMin) {
 
                 // if this is the first iteration, the toBeCalculated
                 // should be the sum as initial point of value.
-                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
+                $toBeCalculatedMax = $newMax;
+                $newMax = $tax->applyCondition($toBeCalculatedMax);
 
-                $newTotal = $tax->applyCondition($toBeCalculated);
-
-                $process++;
+                $toBeCalculatedMin = $newMin;
+                $newMin = $tax->applyCondition($toBeCalculatedMin);
             });
 
-        return Helpers::formatValue(floatval($newTotal), $formatted, $this->config);
+        return collect([
+            'value' => $newMax == $newMin ? Helpers::formatValue(floatval($newMin), $formatted, $this->config) : null,
+            'max' => Helpers::formatValue(floatval($newMax), $formatted, $this->config),
+            'min' => Helpers::formatValue(floatval($newMin), $formatted, $this->config)
+        ]);
     }
 
     /**
@@ -929,56 +942,20 @@ class Cart
             return $value->attributes->group_id == $id;
         });
 
-        $sum = $cart->sum(function (ItemCollection $item) {
+        $max = $cart->sum(function (ItemCollection $item) {
             return $item->getPriceSumWithConditions(false);
         });
 
-        // get the conditions that are meant to be applied
-        // on the subtotal and apply it here before returning the subtotal
-        $conditions = $this
-            ->getConditions()
-            ->filter(function (CartCondition $cond) {
-                return $cond->getTarget() === 'subtotal';
-            });
+        $min = $cart->sum(function (ItemCollection $item) {
+            return $item->isOption() ? 0 : $item->getPriceSumWithConditions(false);
+        });
 
-        $taxes = $this
-            ->getTaxes()
-            ->filter(function (Tax $cond) {
-                return $cond->getTarget() === 'subtotal';
-            });
-
-        // if there is no conditions, lets just return the sum
-        if (!$conditions->count() && !$taxes->count()) return Helpers::formatValue(floatval($sum), $formatted, $this->config);
-
-        // there are conditions, lets apply it
-        $newTotal = 0.00;
-        $process = 0;
-
-        if ($conditions->count())
-            $conditions->each(function (CartCondition $cond) use ($sum, &$newTotal, &$process) {
-
-                // if this is the first iteration, the toBeCalculated
-                // should be the sum as initial point of value.
-                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
-
-                $newTotal = $cond->applyCondition($toBeCalculated);
-
-                $process++;
-            });
-
-        if ($taxes->count())
-            $taxes->each(function (Tax $tax) use ($sum, &$newTotal, &$process) {
-
-                // if this is the first iteration, the toBeCalculated
-                // should be the sum as initial point of value.
-                $toBeCalculated = ($process > 0) ? $newTotal : $sum;
-
-                $newTotal = $tax->applyCondition($toBeCalculated);
-
-                $process++;
-            });
-
-        return Helpers::formatValue(floatval($newTotal), $formatted, $this->config);
+        return collect([
+            'value' => $min == $max ? Helpers::formatValue(floatval($min), $formatted, $this->config) : null,
+            'max' => Helpers::formatValue(floatval($max), $formatted, $this->config),
+            'min' => Helpers::formatValue(floatval($min), $formatted, $this->config)
+        ]);
+        return Helpers::formatValue(floatval($sum), $formatted, $this->config);
     }
 
     /**
@@ -990,9 +967,8 @@ class Cart
     {
         $subTotal = $this->getSubTotal(false);
 
-        $newTotal = 0.00;
-
-        $process = 0;
+        $newMax = (double)$subTotal->get('max');
+        $newMin = (double)$subTotal->get('min');
 
         $conditions = $this
             ->getConditions()
@@ -1008,32 +984,38 @@ class Cart
 
         // if no conditions were added, just return the sub total
         if (!$conditions->count() && !$taxes->count()) {
-            return Helpers::formatValue($subTotal, $this->config['format_numbers'], $this->config);
+            return collect([
+                'value' => $subTotal->get('value'),
+                'max' => $newMax,
+                'min' => $newMin
+            ]);
         }
 
         if ($conditions->count())
             $conditions
-                ->each(function (CartCondition $cond) use ($subTotal, &$newTotal, &$process) {
-                    $toBeCalculated = ($process > 0) ? $newTotal : $subTotal;
+                ->each(function (CartCondition $cond) use (&$newMax, &$newMin) {
+                    $toBeCalculatedMax = $newMax;
+                    $newMax = $cond->applyCondition($toBeCalculatedMax);
 
-                    $newTotal = $cond->applyCondition($toBeCalculated);
-
-                    $process++;
-
+                    $toBeCalculatedMin = $newMin;
+                    $newMin = $cond->applyCondition($toBeCalculatedMin);
                 });
 
         if ($taxes->count())
             $taxes
-                ->each(function (Tax $tax) use ($subTotal, &$newTotal, &$process) {
-                    $toBeCalculated = ($process > 0) ? $newTotal : $subTotal;
+                ->each(function (Tax $tax) use (&$newMax, &$newMin) {
+                    $toBeCalculatedMax = $newMax;
+                    $newMax = $tax->applyCondition($toBeCalculatedMax);
 
-                    $newTotal = $tax->applyCondition($toBeCalculated);
-
-                    $process++;
-
+                    $toBeCalculatedMin = $newMin;
+                    $newMin = $tax->applyCondition($toBeCalculatedMin);
                 });
 
-        return Helpers::formatValue($newTotal, $this->config['format_numbers'], $this->config);
+        return collect([
+            'value' => $newMax == $newMin ? Helpers::formatValue($newMin, $this->config['format_numbers'], $this->config) : null,
+            'max' => Helpers::formatValue($newMax, $this->config['format_numbers'], $this->config),
+            'min' => Helpers::formatValue($newMin, $this->config['format_numbers'], $this->config)
+        ]);
     }
 
     /**
@@ -1048,7 +1030,7 @@ class Cart
         if ($items->isEmpty()) return 0;
 
         $count = $items->sum(function ($item) {
-            return isset($item['quantity'])?$item['quantity']:0;
+            return isset($item['quantity']) ? $item['quantity'] : 0;
         });
 
         return $count;

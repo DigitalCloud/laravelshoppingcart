@@ -53,31 +53,31 @@ class TaxesTest extends PHPUnit\Framework\TestCase
 
         $this->cart->tax($tax);
 
-        $this->assertEquals(192.49, $this->cart->getSubTotal());
+        $this->assertEquals(192.49, $this->cart->getSubTotal()->get('value'));
 
         // the total is also should be the same with sub total since our getTotal
         // also depends on what is the value of subtotal
-        $this->assertEquals(192.49, $this->cart->getTotal());
+        $this->assertEquals(192.49, $this->cart->getTotal()->get('value'));
     }
 
     public function test_total_without_tax()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // no changes in subtotal as the condition's target added was for total
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be the same as subtotal
-        $this->assertEquals(187.49, $this->cart->getTotal(), 'Cart should have a total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getTotal()->get('value'), 'Cart should have a total of 187.49');
     }
 
     public function test_total_with_tax()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // add tax
         $tax = new \Darryldecode\Cart\Tax(array(
@@ -90,18 +90,18 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->tax($tax);
 
         // no changes in subtotal as the tax's target added was for total
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be changed
         $this->cart->setDecimals(5);
-        $this->assertEquals(210.92625, $this->cart->getTotal(), 'Cart should have a total of 210.92625');
+        $this->assertEquals(210.92625, $this->cart->getTotal()->get('value'), 'Cart should have a total of 210.92625');
     }
 
     public function test_total_with_multiple_taxes_added_scenario_one()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // add tax
         $tax1 = new Tax(array(
@@ -121,18 +121,18 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->condition($tax2);
 
         // no changes in subtotal as the condition's target added was for subtotal
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be changed
         $this->cart->setDecimals(5);
-        $this->assertEquals(225.92625, $this->cart->getTotal(), 'Cart should have a total of 225.92625');
+        $this->assertEquals(225.92625, $this->cart->getTotal()->get('value'), 'Cart should have a total of 225.92625');
     }
 
     public function test_total_with_multiple_taxes_added_scenario_two()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // add condition
         $tax = new Tax(array(
@@ -152,18 +152,18 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->tax($tax);
 
         // no changes in subtotal as the condition's target added was for subtotal
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be changed
         $this->cart->setDecimals(5);
-        $this->assertEquals(194.05125, $this->cart->getTotal(), 'Cart should have a total of 195.92625');
+        $this->assertEquals(194.05125, $this->cart->getTotal()->get('value'), 'Cart should have a total of 195.92625');
     }
 
     public function test_total_with_multiple_taxes_added_scenario_three()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // add condition
         $tax1 = new Tax(array(
@@ -183,18 +183,18 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->tax($tax2);
 
         // no changes in subtotal as the condition's target added was for total
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be changed
         $this->cart->setDecimals(5);
-        $this->assertEquals(225.92625, $this->cart->getTotal(), 'Cart should have a total of 149.05375');
+        $this->assertEquals(225.92625, $this->cart->getTotal()->get('value'), 'Cart should have a total of 149.05375');
     }
 
     public function test_cart_multiple_taxes_can_be_added_once_by_array()
     {
         $this->fillCart();
 
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // add condition
         $tax1 = new Tax(array(
@@ -213,11 +213,11 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->tax([$tax1, $tax2]);
 
         // no changes in subtotal as the condition's target added was for total
-        $this->assertEquals(187.49, $this->cart->getSubTotal(), 'Cart should have sub total of 187.49');
+        $this->assertEquals(187.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
 
         // total should be changed
         $this->cart->setDecimals(5);
-        $this->assertEquals(225.92625, $this->cart->getTotal(), 'Cart should have a total of 225.92625');
+        $this->assertEquals(225.92625, $this->cart->getTotal()->get('value'), 'Cart should have a total of 225.92625');
     }
 
     public function test_add_item_with_tax()
@@ -240,7 +240,7 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->add($item);
 
         $this->assertEquals(105, $this->cart->get(456)->getPriceSumWithConditions());
-        $this->assertEquals(105, $this->cart->getSubTotal());
+        $this->assertEquals(105, $this->cart->getSubTotal()->get('value'));
     }
 
     public function test_add_item_with_multiple_item_taxes_in_multiple_tax_instance()
@@ -268,7 +268,7 @@ class TaxesTest extends PHPUnit\Framework\TestCase
         $this->cart->add($item);
 
         $this->assertEquals(130.00, $this->cart->get(456)->getPriceSumWithConditions(), 'Item subtotal with 1 item should be 80');
-        $this->assertEquals(130.00, $this->cart->getSubTotal(), 'Cart subtotal with 1 item should be 80');
+        $this->assertEquals(130.00, $this->cart->getSubTotal()->get('value'), 'Cart subtotal with 1 item should be 80');
     }
 
     public function test_add_item_tax()
@@ -545,7 +545,7 @@ class TaxesTest extends PHPUnit\Framework\TestCase
 
         $this->cart->tax([$tax1, $tax2]);
 
-        $subTotal = $this->cart->getSubTotal();
+        $subTotal = $this->cart->getSubTotal()->get('value');
 
         $this->assertEquals(100, $subTotal, 'Subtotal should be 100');
 
