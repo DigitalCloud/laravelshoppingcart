@@ -153,7 +153,7 @@ class Cart
      * @return $this
      * @throws InvalidItemException
      */
-    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array())
+    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array(), $unit = null)
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -169,7 +169,8 @@ class Cart
                         $item['quantity'],
                         Helpers::issetAndHasValueOrAssignDefault($item['attributes'], array()),
                         Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array()),
-                        Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array())
+                        Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array()),
+                        $item['unit'] ?? null
                     );
                 }
             } else {
@@ -180,7 +181,8 @@ class Cart
                     $id['quantity'],
                     Helpers::issetAndHasValueOrAssignDefault($id['attributes'], array()),
                     Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array()),
-                    Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array())
+                    Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array()),
+                    $id['unit'] ?? null
                 );
             }
 
@@ -195,7 +197,8 @@ class Cart
             'quantity' => $quantity,
             'attributes' => new ItemAttributeCollection($attributes),
             'conditions' => $conditions,
-            'taxes' => $taxes
+            'taxes' => $taxes,
+            'unit' => $unit
         ));
 
         // get the cart

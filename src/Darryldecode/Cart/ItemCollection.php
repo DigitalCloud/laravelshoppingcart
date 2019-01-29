@@ -50,6 +50,11 @@ class ItemCollection extends Collection
         return null;
     }
 
+    public function getUnit(){
+        if ($this->has('unit')) return $this->get('unit');
+        return null;
+    }
+
     /**
      * check if item has conditions
      *
