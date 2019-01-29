@@ -1,6 +1,7 @@
 <?php namespace Darryldecode\Cart;
 
 use Darryldecode\Cart\Exceptions\InvalidConditionException;
+use Darryldecode\Cart\Exceptions\InvalidDependent;
 use Darryldecode\Cart\Exceptions\InvalidGroup;
 use Darryldecode\Cart\Exceptions\InvalidItemException;
 use Darryldecode\Cart\Helpers\Helpers;
@@ -1075,12 +1076,17 @@ class Cart
             return !$value->quantity;
         })->pluck('id')->toArray();
 
+        $dependent_ids = $this->getContent()->filter(function ($value, $key) {
+            return $value->quantity;
+        })->pluck('id')->toArray();
+
         $rules = array(
             'id' => 'required',
             'price' => 'required|numeric',
             'quantity' => 'required|numeric|min:1',
             'name' => 'required',
-            'attributes.group_id' => 'nullable|in:' . implode(',', $group_ids)
+            'attributes.group_id' => 'nullable|in:' . implode(',', $group_ids),
+            'attributes.dependent_id' => 'nullable|in:' . implode(',', $dependent_ids)
         );
 
         $validator = CartItemValidator::make($item, $rules);
@@ -1089,6 +1095,9 @@ class Cart
         if ($validator->fails()) {
             if ($validator->errors()->get('attributes.group_id'))
                 throw new InvalidGroup($validator->messages()->first());
+
+            if ($validator->errors()->get('attributes.dependent_id'))
+                throw new InvalidDependent($validator->messages()->first());
             throw new InvalidItemException($validator->messages()->first());
         }
 
