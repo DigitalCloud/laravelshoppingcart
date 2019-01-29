@@ -150,10 +150,15 @@ class Cart
      * @param int $quantity
      * @param array $attributes
      * @param Tax|array $conditions
+     * @param array $taxes
+     * @param null $unit
+     * @param array $quantities
      * @return $this
+     * @throws InvalidDependent
+     * @throws InvalidGroup
      * @throws InvalidItemException
      */
-    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array(), $unit = null)
+    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array(), $unit = null, $quantities = [])
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -163,26 +168,28 @@ class Cart
             if (Helpers::isMultiArray($id)) {
                 foreach ($id as $item) {
                     $this->add(
-                        $item['id'],
-                        $item['name'],
-                        $item['price'],
-                        $item['quantity'],
+                        $item['id'] ?? null,
+                        $item['name'] ?? null,
+                        $item['price'] ?? null,
+                        $item['quantity'] ?? null,
                         Helpers::issetAndHasValueOrAssignDefault($item['attributes'], array()),
                         Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array()),
                         Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array()),
-                        $item['unit'] ?? null
+                        $item['unit'] ?? null,
+                        $item['quantities'] ?? []
                     );
                 }
             } else {
                 $this->add(
-                    $id['id'],
-                    $id['name'],
-                    $id['price'],
-                    $id['quantity'],
+                    $id['id'] ?? null,
+                    $id['name'] ?? null,
+                    $id['price'] ?? null,
+                    $id['quantity'] ?? null,
                     Helpers::issetAndHasValueOrAssignDefault($id['attributes'], array()),
                     Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array()),
                     Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array()),
-                    $id['unit'] ?? null
+                    $id['unit'] ?? null,
+                    $id['quantities'] ?? []
                 );
             }
 
@@ -198,8 +205,11 @@ class Cart
             'attributes' => new ItemAttributeCollection($attributes),
             'conditions' => $conditions,
             'taxes' => $taxes,
-            'unit' => $unit
+            'unit' => $unit,
+            'quantities' => collect($quantities)
         ));
+
+        if ($quantities) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
 
         // get the cart
         $cart = $this->getContent();
@@ -215,6 +225,22 @@ class Cart
         }
 
         return $this;
+    }
+
+    protected function recalculateQuantity($quantities)
+    {
+        $quantity = 1;
+        $quantities->each(function ($item) use (&$quantity) {
+            $quantity *= $item['quantity'];
+        });
+        //$item['quantity'] = $quantity;
+        $unit = $quantities->filter(function ($value, $key) {
+            return isset($value['unit']) && $value['unit'];
+        })->pluck('unit')->toArray();
+
+        $unit = sizeof($unit) ? implode('/', $unit) : "";
+
+        return [$quantity, $unit];
     }
 
     /**
@@ -327,11 +353,15 @@ class Cart
                 $this->fireEvent('quantityUpdated', $data);
             } elseif ($key == 'attributes') {
                 $item[$key] = new ItemAttributeCollection($value);
-            } else {
+            } elseif ($key == 'quantities') {
+                $item[$key] = collect($value);
+            }
+            else {
                 $item[$key] = $value;
             }
         }
 
+        if (isset($item['quantities']) && $item['quantities']->count()) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
         $cart->put($id, $item);
 
         $this->save($cart);
@@ -1069,12 +1099,14 @@ class Cart
      *
      * @param $item
      * @return array $item;
+     * @throws InvalidDependent
      * @throws InvalidGroup
      * @throws InvalidItemException
      */
     protected function validate($item)
     {
         $item['attributes'] = $item['attributes']->toArray();
+        $item['quantities'] = $item['quantities']->toArray();
         $group_ids = $this->getContent()->filter(function ($value, $key) {
             return !$value->quantity;
         })->pluck('id')->toArray();
@@ -1086,15 +1118,18 @@ class Cart
         $rules = array(
             'id' => 'required',
             'price' => 'required|numeric',
-            'quantity' => 'required|numeric|min:1',
+            'quantity' => 'nullable|required_without:quantities|numeric|min:1',
             'name' => 'required',
             'attributes.group_id' => 'nullable|in:' . implode(',', $group_ids),
-            'attributes.dependent_id' => 'nullable|in:' . implode(',', $dependent_ids)
+            'attributes.dependent_id' => 'nullable|in:' . implode(',', $dependent_ids),
+            'quantities' => 'nullable|array',
+            'quantities.*.quantity' => 'required|numeric|min:1'
         );
 
         $validator = CartItemValidator::make($item, $rules);
 
         $item['attributes'] = new ItemAttributeCollection($item['attributes']);
+        $item['quantities'] = collect($item['quantities']);
         if ($validator->fails()) {
             if ($validator->errors()->get('attributes.group_id'))
                 throw new InvalidGroup($validator->messages()->first());

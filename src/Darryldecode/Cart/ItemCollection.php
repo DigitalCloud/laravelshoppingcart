@@ -50,9 +50,16 @@ class ItemCollection extends Collection
         return null;
     }
 
-    public function getUnit(){
+    public function getUnit()
+    {
         if ($this->has('unit')) return $this->get('unit');
         return null;
+    }
+
+    public function getQuantities()
+    {
+        if ($this->has('quantities')) return $this->get('quantities');
+        return collect([]);
     }
 
     /**

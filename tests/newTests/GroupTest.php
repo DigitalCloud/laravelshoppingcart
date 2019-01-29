@@ -364,7 +364,6 @@ class GroupTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(187.49, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 110.24');
     }
 
-
     public function test_cart_get_total_quantity()
     {
         $group = array(
