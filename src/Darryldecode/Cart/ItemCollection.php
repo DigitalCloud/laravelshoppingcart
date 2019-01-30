@@ -81,7 +81,7 @@ class ItemCollection extends Collection
 
     public function hasAlternatives()
     {
-        if (isset($this['attributes']['alternative_id'])){
+        if (isset($this['attributes']['alternative_id'])) {
             return true;
         }
 
@@ -125,6 +125,13 @@ class ItemCollection extends Collection
     {
         if (!$this->hasTaxes()) return [];
         return $this['taxes'];
+    }
+
+    public function inGroup()
+    {
+        if (isset($this['attributes']['group_id'])) return true;
+
+        return false;
     }
 
     /**

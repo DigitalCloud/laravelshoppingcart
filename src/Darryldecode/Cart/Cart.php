@@ -899,7 +899,21 @@ class Cart
         $cart = $this->getContent();
 
         $items = collect([]);
-        $max = $cart->sum(function (ItemCollection $item) use (&$items) {
+        $groups = collect([]);
+        $max = $cart->sum(function (ItemCollection $item) use (&$items, &$groups) {
+            if ($item->inGroup()) {
+                $group = $this->group($item);
+                // return 0 if item->id in the groups
+                if ($groups->contains($item->id))
+                    return 0;
+
+                // add all sub items on $groups to discard it
+                $subItems = $this->subItems($group);
+                $groups=$groups->concat($subItems->pluck('id')->toArray());
+                // return the max value of function getGroupSubTotal()
+                return $this->getGroupSubTotal($group->id)->get('max');
+            }
+
             if (!$item->hasAlternatives())
                 return $item->getPriceSumWithConditions(false);
 
@@ -918,7 +932,22 @@ class Cart
         });
 
         $items = collect([]);
-        $min = $cart->sum(function (ItemCollection $item) use (&$items) {
+        $groups = collect([]);
+        $min = $cart->sum(function (ItemCollection $item) use (&$items, &$groups) {
+            if ($item->inGroup()) {
+                $group = $this->group($item);
+                // return 0 if item->id in the groups
+                if ($groups->contains($item->id))
+                    return 0;
+
+                // add all sub items on $groups to discard it
+                $subItems = $this->subItems($group);
+                $groups=$groups->concat($subItems->pluck('id')->toArray());
+
+                // return the max value of function getGroupSubTotal()
+                return $this->getGroupSubTotal($group->id)->get('min');
+            }
+
             if ($item->isOption())
                 return 0;
 
@@ -1048,10 +1077,50 @@ class Cart
             return $minItemPrice->getPriceSumWithConditions(false);
         });
 
+        // get the conditions that are meant to be applied
+        // on the subtotal and apply it here before returning the subtotal
+        $group = $this->get($id);
+        $conditions = collect($group->getConditions());
+        $taxes = collect($group->getTaxes());
+
+        // if there is no conditions, lets just return the sum
+        if (!$conditions->count() && !$taxes->count())
+            return collect([
+                'value' => $min == $max ? Helpers::formatValue(floatval($min), $formatted, $this->config) : null,
+                'max' => Helpers::formatValue(floatval($max), $formatted, $this->config),
+                'min' => Helpers::formatValue(floatval($min), $formatted, $this->config)
+            ]);
+
+        // there are conditions, lets apply it
+        $newMax = $max;
+        $newMin = $min;
+
+        if ($conditions->count())
+            $conditions->each(function (CartCondition $cond) use (&$newMax, &$newMin) {
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculatedMax = $newMax;
+                $newMax = $cond->applyCondition($toBeCalculatedMax);
+
+                $toBeCalculatedMin = $newMin;
+                $newMin = $cond->applyCondition($toBeCalculatedMin);
+            });
+
+        if ($taxes->count())
+            $taxes->each(function (Tax $tax) use (&$newMax, &$newMin) {
+                // if this is the first iteration, the toBeCalculated
+                // should be the sum as initial point of value.
+                $toBeCalculatedMax = $newMax;
+                $newMax = $tax->applyCondition($toBeCalculatedMax);
+
+                $toBeCalculatedMin = $newMin;
+                $newMin = $tax->applyCondition($toBeCalculatedMin);
+            });
+
         return collect([
-            'value' => $min == $max ? Helpers::formatValue(floatval($min), $formatted, $this->config) : null,
-            'max' => Helpers::formatValue(floatval($max), $formatted, $this->config),
-            'min' => Helpers::formatValue(floatval($min), $formatted, $this->config)
+            'value' => $newMax == $newMin ? Helpers::formatValue(floatval($newMin), $formatted, $this->config) : null,
+            'max' => Helpers::formatValue(floatval($newMax), $formatted, $this->config),
+            'min' => Helpers::formatValue(floatval($newMin), $formatted, $this->config)
         ]);
     }
 
@@ -1141,6 +1210,20 @@ class Cart
     public function getContent()
     {
         return (new CartCollection($this->session->get($this->sessionKeyCartItems)));
+    }
+
+    public function group($item)
+    {
+        if (!$item->inGroup()) return null;
+
+        return $this->getContent()->get($item['attributes']['group_id']);
+    }
+
+    public function subItems($group)
+    {
+        return $this->getContent()->filter(function ($value, $key) use ($group) {
+            return $value->inGroup() && $value['attributes']['group_id'] == $group->id;
+        });
     }
 
     public function getAlternatives($item)

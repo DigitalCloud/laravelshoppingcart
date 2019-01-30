@@ -406,4 +406,62 @@ class GroupTest extends PHPUnit\Framework\TestCase
 
         $this->assertEquals(0, $item->getPriceSum(), 'Item summed price should be 201.98');
     }
+
+    public function test_group_sub_total_with_conditions_and_taxes()
+    {
+        $group = array(
+            'id' => 1,
+            'name' => 'Sample Group',
+            'conditions' => array(
+                new \Darryldecode\Cart\CartCondition([
+                    'name' => 'discount',
+                    'value' => '-5',
+                    'type' => 'discount'
+                ])
+            ),
+            'taxes' => array(
+                new \Darryldecode\Cart\Tax([
+                    'name' => 'tax 30',
+                    'value' => '30',
+                    'type' => 'tax'
+                ])
+            )
+        );
+
+        $this->cart->addGroup($group);
+
+        $items = array(
+            array(
+                'id' => 456,
+                'name' => 'Sample Item 1',
+                'price' => 67.99,
+                'quantity' => 1,
+                'attributes' => array(
+                    'group_id' => 1
+                )
+            ),
+            array(
+                'id' => 568,
+                'name' => 'Sample Item 2',
+                'price' => 69.25,
+                'quantity' => 1,
+                'attributes' => array()
+            ),
+            array(
+                'id' => 856,
+                'name' => 'Sample Item 3',
+                'price' => 50.25,
+                'quantity' => 1,
+                'attributes' => array(
+                    'group_id' => 1
+                )
+            ),
+        );
+
+        $this->cart->add($items);
+
+        $this->assertEquals(143.24, $this->cart->getGroupSubTotal(1)->get('value'), 'Group should have sub total of 118.24');
+
+        $this->assertEquals(212.49, $this->cart->getSubTotal()->get('value'), 'Cart should have sub total of 187.49');
+    }
 }
