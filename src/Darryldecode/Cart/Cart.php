@@ -13,7 +13,6 @@ use Darryldecode\Cart\Validators\CartItemValidator;
  */
 class Cart
 {
-
     /**
      * the item storage
      *
@@ -355,8 +354,7 @@ class Cart
                 $item[$key] = new ItemAttributeCollection($value);
             } elseif ($key == 'quantities') {
                 $item[$key] = collect($value);
-            }
-            else {
+            } else {
                 $item[$key] = $value;
             }
         }
@@ -900,12 +898,45 @@ class Cart
     {
         $cart = $this->getContent();
 
-        $max = $cart->sum(function (ItemCollection $item) {
-            return $item->getPriceSumWithConditions(false);
+        $items = collect([]);
+        $max = $cart->sum(function (ItemCollection $item) use (&$items) {
+            if (!$item->hasAlternatives())
+                return $item->getPriceSumWithConditions(false);
+
+            if ($items->contains($item->id))
+                return 0;
+
+            $holder = $this->getAlternatives($item);
+            $maxItemPrice = $item;
+            $holder->each(function ($var) use (&$maxItemPrice, $item) {
+                if ($var->getPriceSumWithConditions(false) > $item->getPriceSumWithConditions(false))
+                    $maxItemPrice = $var;
+            });
+
+            $items = $items->concat($holder->pluck('id')->toArray());
+            return $maxItemPrice->getPriceSumWithConditions(false);
         });
 
-        $min = $cart->sum(function (ItemCollection $item) {
-            return $item->isOption() ? 0 : $item->getPriceSumWithConditions(false);
+        $items = collect([]);
+        $min = $cart->sum(function (ItemCollection $item) use (&$items) {
+            if ($item->isOption())
+                return 0;
+
+            if (!$item->hasAlternatives())
+                return $item->getPriceSumWithConditions(false);
+
+            if ($items->contains($item->id))
+                return 0;
+
+            $holder = $this->getAlternatives($item);
+            $minItemPrice = $item;
+            $holder->each(function ($var) use (&$minItemPrice, $item) {
+                if ($var->getPriceSumWithConditions(false) < $item->getPriceSumWithConditions(false))
+                    $minItemPrice = $var;
+            });
+
+            $items = $items->concat($holder->pluck('id')->toArray());
+            return $minItemPrice->getPriceSumWithConditions(false);
         });
 
         // get the conditions that are meant to be applied
@@ -976,12 +1007,45 @@ class Cart
             return $value->attributes->group_id == $id;
         });
 
-        $max = $cart->sum(function (ItemCollection $item) {
-            return $item->getPriceSumWithConditions(false);
+        $items = collect([]);
+        $max = $cart->sum(function (ItemCollection $item) use (&$items) {
+            if (!$item->hasAlternatives())
+                return $item->getPriceSumWithConditions(false);
+
+            if ($items->contains($item->id))
+                return 0;
+
+            $holder = $this->getAlternatives($item);
+            $maxItemPrice = $item;
+            $holder->each(function ($var) use (&$maxItemPrice, $item) {
+                if ($var->getPriceSumWithConditions(false) > $item->getPriceSumWithConditions(false))
+                    $maxItemPrice = $var;
+            });
+
+            $items = $items->concat($holder->pluck('id')->toArray());
+            return $maxItemPrice->getPriceSumWithConditions(false);
         });
 
-        $min = $cart->sum(function (ItemCollection $item) {
-            return $item->isOption() ? 0 : $item->getPriceSumWithConditions(false);
+        $items = collect([]);
+        $min = $cart->sum(function (ItemCollection $item) use (&$items) {
+            if ($item->isOption())
+                return 0;
+
+            if (!$item->hasAlternatives())
+                return $item->getPriceSumWithConditions(false);
+
+            if ($items->contains($item->id))
+                return 0;
+
+            $holder = $this->getAlternatives($item);
+            $minItemPrice = $item;
+            $holder->each(function ($var) use (&$minItemPrice, $item) {
+                if ($var->getPriceSumWithConditions(false) < $item->getPriceSumWithConditions(false))
+                    $minItemPrice = $var;
+            });
+
+            $items = $items->concat($holder->pluck('id')->toArray());
+            return $minItemPrice->getPriceSumWithConditions(false);
         });
 
         return collect([
@@ -989,7 +1053,6 @@ class Cart
             'max' => Helpers::formatValue(floatval($max), $formatted, $this->config),
             'min' => Helpers::formatValue(floatval($min), $formatted, $this->config)
         ]);
-        return Helpers::formatValue(floatval($sum), $formatted, $this->config);
     }
 
     /**
@@ -1078,6 +1141,16 @@ class Cart
     public function getContent()
     {
         return (new CartCollection($this->session->get($this->sessionKeyCartItems)));
+    }
+
+    public function getAlternatives($item)
+    {
+        if ($item->hasAlternatives()) {
+            return $this->getContent()->filter(function ($value, $key) use ($item) {
+                return $value->hasAlternatives() && $value->attributes->alternative_id == $item->attributes->alternative_id;
+            });
+        }
+        return collect([]);
     }
 
     /**

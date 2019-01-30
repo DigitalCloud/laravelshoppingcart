@@ -79,6 +79,15 @@ class ItemCollection extends Collection
         return false;
     }
 
+    public function hasAlternatives()
+    {
+        if (isset($this['attributes']['alternative_id'])){
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * check if item has taxes
      *
@@ -127,6 +136,7 @@ class ItemCollection extends Collection
     {
         $originalPrice = $newPrice = $this->price;
         $processed = 0;
+
         if ($this->hasConditions()) {
             if (is_array($this->conditions)) {
                 foreach ($this->conditions as $cond) {
