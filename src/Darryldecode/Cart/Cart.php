@@ -159,7 +159,7 @@ class Cart
      */
     public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(),
                         $taxes = array(), $unit = null, $quantities = [], $alternative_id = null, $is_optional = false,
-                        $group_id = null, $dependent_id = null, $price_percent = null)
+                        $group_id = null, $dependent_id = null, $price_percent = null, $quantity_percent = null)
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -182,7 +182,8 @@ class Cart
                         $item['is_optional'] ?? null,
                         $item['group_id'] ?? null,
                         $item['dependent_id'] ?? null,
-                        $item['price_percent'] ?? []
+                        $item['price_percent'] ?? [],
+                        $item['quantity_percent'] ?? []
                     );
                 }
             } else {
@@ -200,7 +201,8 @@ class Cart
                     $id['is_optional'] ?? null,
                     $id['group_id'] ?? null,
                     $id['dependent_id'] ?? null,
-                    $id['price_percent'] ?? []
+                    $id['price_percent'] ?? [],
+                    $id['quantity_percent'] ?? []
                 );
             }
 
@@ -222,11 +224,13 @@ class Cart
             'is_optional' => $is_optional,
             'group_id' => $group_id,
             'dependent_id' => $dependent_id,
-            'price_percent' => collect($price_percent)
+            'price_percent' => collect($price_percent),
+            'quantity_percent' => collect($quantity_percent)
         ));
 
         if ($quantities) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
         if ($price_percent) $item['price'] = $this->recalculatePrice($item['price_percent']);
+        if ($quantity_percent) $item['quantity'] = $this->recalculateQuantityPercent($item['quantity_percent']);
 
         // get the cart
         $cart = $this->getContent();
@@ -264,6 +268,15 @@ class Cart
             return $from['price'] * $price_percent['percent'] / 100;
 
         return $this->getGroupSubTotal($from['id'])['value'] * $price_percent['percent'] / 100;
+    }
+
+    protected function recalculateQuantityPercent($quantity_percent)
+    {
+        $from = $this->get($quantity_percent['from']);
+        if (isset($from['quantity']))
+            return $from['quantity'] * $quantity_percent['percent'] / 100;
+
+        return 1;
     }
 
     /**
@@ -376,15 +389,26 @@ class Cart
                 $this->fireEvent('quantityUpdated', $data);
             } elseif ($key == 'attributes') {
                 $item[$key] = new ItemAttributeCollection($value);
-            } elseif (in_array($key, ['quantities', 'price_percent'])) {
+            } elseif (in_array($key, ['quantities', 'price_percent', 'quantity_percent'])) {
                 $item[$key] = collect($value);
             } else {
                 $item[$key] = $value;
             }
         }
 
-        if (isset($item['quantities']) && $item['quantities']->count()) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
-        if (isset($item['price_percent']) && $item['price_percent']->count()) $item['price'] = $this->recalculatePrice($item['price_percent']);
+        if (isset($item['quantities']) && $item['quantities']->count()) {
+            list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
+            $this->fireEvent('quantityUpdated', $item);
+        }
+        if (isset($item['price_percent']) && $item['price_percent']->count()) {
+            $item['price'] = $this->recalculatePrice($item['price_percent']);
+            $this->fireEvent('priceUpdated', $item);
+        }
+        if (isset($item['quantity_percent']) && $item['quantity_percent']->count()) {
+            $item['quantity'] = $this->recalculateQuantityPercent($item['quantity_percent']);
+            $this->fireEvent('quantityUpdated', $item);
+        }
+
         $cart->put($id, $item);
 
         $this->save($cart);
@@ -1288,6 +1312,7 @@ class Cart
     {
         $item['quantities'] = $item['quantities']->toArray();
         $item['price_percent'] = $item['price_percent']->toArray();
+        $item['quantity_percent'] = $item['quantity_percent']->toArray();
         $group_ids = $this->getContent()->filter(function ($value, $key) {
             return !$value->quantity;
         })->pluck('id')->toArray();
@@ -1298,8 +1323,8 @@ class Cart
 
         $rules = array(
             'id' => 'required',
-            'price' => 'nullable|required_without:price_percent|numeric|min:1',
-            'quantity' => 'nullable|required_without:quantities|numeric|min:1',
+            'price' => 'nullable|required_without:price_percent|numeric|min:0',
+            'quantity' => 'nullable|required_withoutAll:quantities,quantity_percent|numeric|min:1',
             'name' => 'required',
             'group_id' => 'nullable|in:' . implode(',', $group_ids),
             'dependent_id' => 'nullable|in:' . implode(',', $dependent_ids),
@@ -1308,11 +1333,15 @@ class Cart
             'price_percent' => 'required_without:price|array',
             'price_percent.from' => 'nullable|in:' . implode(',', $this->getContent()->pluck('id')->toArray()),
             'price_percent.percent' => 'nullable|numeric|min:1',
+            'quantity_percent' => 'array',
+            'quantity_percent.from' => 'nullable|in:' . implode(',', $this->getContent()->pluck('id')->toArray()),
+            'quantity_percent.percent' => 'nullable|numeric|min:1',
         );
 
         $validator = CartItemValidator::make($item, $rules);
         $item['quantities'] = collect($item['quantities']);
         $item['price_percent'] = collect($item['price_percent']);
+        $item['quantity_percent'] = collect($item['quantity_percent']);
         if ($validator->fails()) {
             if ($validator->errors()->get('group_id'))
                 throw new InvalidGroup($validator->messages()->first());

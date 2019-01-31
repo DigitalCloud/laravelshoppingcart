@@ -68,6 +68,12 @@ class ItemCollection extends Collection
         return collect([]);
     }
 
+    public function getQuantityPercent()
+    {
+        if ($this->has('quantity_percent')) return $this->get('quantity_percent');
+        return collect([]);
+    }
+
     /**
      * check if item has conditions
      *
