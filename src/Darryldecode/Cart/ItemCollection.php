@@ -62,6 +62,12 @@ class ItemCollection extends Collection
         return collect([]);
     }
 
+    public function getPricePercent()
+    {
+        if ($this->has('price_percent')) return $this->get('price_percent');
+        return collect([]);
+    }
+
     /**
      * check if item has conditions
      *

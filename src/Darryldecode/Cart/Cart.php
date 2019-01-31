@@ -159,7 +159,7 @@ class Cart
      */
     public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(),
                         $taxes = array(), $unit = null, $quantities = [], $alternative_id = null, $is_optional = false,
-                        $group_id = null, $dependent_id = null)
+                        $group_id = null, $dependent_id = null, $price_percent = null)
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -181,7 +181,8 @@ class Cart
                         $item['alternative_id'] ?? null,
                         $item['is_optional'] ?? null,
                         $item['group_id'] ?? null,
-                        $item['dependent_id'] ?? null
+                        $item['dependent_id'] ?? null,
+                        $item['price_percent'] ?? []
                     );
                 }
             } else {
@@ -198,7 +199,8 @@ class Cart
                     $id['alternative_id'] ?? null,
                     $id['is_optional'] ?? null,
                     $id['group_id'] ?? null,
-                    $id['dependent_id'] ?? null
+                    $id['dependent_id'] ?? null,
+                    $id['price_percent'] ?? []
                 );
             }
 
@@ -219,22 +221,21 @@ class Cart
             'alternative_id' => $alternative_id,
             'is_optional' => $is_optional,
             'group_id' => $group_id,
-            'dependent_id' => $dependent_id
+            'dependent_id' => $dependent_id,
+            'price_percent' => collect($price_percent)
         ));
 
         if ($quantities) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
+        if ($price_percent) $item['price'] = $this->recalculatePrice($item['price_percent']);
 
         // get the cart
         $cart = $this->getContent();
 
         // if the item is already in the cart we will just update it
         if ($cart->has($id)) {
-
             $this->update($id, $item);
         } else {
-
             $this->addRow($id, $item);
-
         }
 
         return $this;
@@ -246,7 +247,7 @@ class Cart
         $quantities->each(function ($item) use (&$quantity) {
             $quantity *= $item['quantity'];
         });
-        //$item['quantity'] = $quantity;
+
         $unit = $quantities->filter(function ($value, $key) {
             return isset($value['unit']) && $value['unit'];
         })->pluck('unit')->toArray();
@@ -254,6 +255,15 @@ class Cart
         $unit = sizeof($unit) ? implode('/', $unit) : "";
 
         return [$quantity, $unit];
+    }
+
+    protected function recalculatePrice($price_percent)
+    {
+        $from = $this->get($price_percent['from']);
+        if (isset($from['quantity']))
+            return $from['price'] * $price_percent['percent'] / 100;
+
+        return $this->getGroupSubTotal($from['id'])['value'] * $price_percent['percent'] / 100;
     }
 
     /**
@@ -366,7 +376,7 @@ class Cart
                 $this->fireEvent('quantityUpdated', $data);
             } elseif ($key == 'attributes') {
                 $item[$key] = new ItemAttributeCollection($value);
-            } elseif ($key == 'quantities') {
+            } elseif (in_array($key, ['quantities', 'price_percent'])) {
                 $item[$key] = collect($value);
             } else {
                 $item[$key] = $value;
@@ -374,6 +384,7 @@ class Cart
         }
 
         if (isset($item['quantities']) && $item['quantities']->count()) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
+        if (isset($item['price_percent']) && $item['price_percent']->count()) $item['price'] = $this->recalculatePrice($item['price_percent']);
         $cart->put($id, $item);
 
         $this->save($cart);
@@ -1091,9 +1102,6 @@ class Cart
             return $minItemPrice->getPriceSumWithConditions(false);
         });
 
-//        print_r($max);
-        //print_r($min);
-        //die();
         // get the conditions that are meant to be applied
         // on the subtotal and apply it here before returning the subtotal
         $group = $this->get($id);
@@ -1279,6 +1287,7 @@ class Cart
     protected function validate($item)
     {
         $item['quantities'] = $item['quantities']->toArray();
+        $item['price_percent'] = $item['price_percent']->toArray();
         $group_ids = $this->getContent()->filter(function ($value, $key) {
             return !$value->quantity;
         })->pluck('id')->toArray();
@@ -1289,18 +1298,21 @@ class Cart
 
         $rules = array(
             'id' => 'required',
-            'price' => 'required|numeric',
+            'price' => 'nullable|required_without:price_percent|numeric|min:1',
             'quantity' => 'nullable|required_without:quantities|numeric|min:1',
             'name' => 'required',
             'group_id' => 'nullable|in:' . implode(',', $group_ids),
             'dependent_id' => 'nullable|in:' . implode(',', $dependent_ids),
             'quantities' => 'nullable|array',
-            'quantities.*.quantity' => 'required|numeric|min:1'
+            'quantities.*.quantity' => 'required|numeric|min:1',
+            'price_percent' => 'required_without:price|array',
+            'price_percent.from' => 'nullable|in:' . implode(',', $this->getContent()->pluck('id')->toArray()),
+            'price_percent.percent' => 'nullable|numeric|min:1',
         );
 
         $validator = CartItemValidator::make($item, $rules);
-
         $item['quantities'] = collect($item['quantities']);
+        $item['price_percent'] = collect($item['price_percent']);
         if ($validator->fails()) {
             if ($validator->errors()->get('group_id'))
                 throw new InvalidGroup($validator->messages()->first());
