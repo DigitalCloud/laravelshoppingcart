@@ -58,8 +58,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $item = array(
             'id' => 456,
-            'name' => 'Sample Item',
-            'attributes' => array()
+            'name' => 'Sample Item'
         );
 
         $this->cart->addGroup($item);
@@ -75,18 +74,15 @@ class GroupTest extends PHPUnit\Framework\TestCase
         $items = array(
             array(
                 'id' => 456,
-                'name' => 'Sample Item 1',
-                'attributes' => array()
+                'name' => 'Sample Item 1'
             ),
             array(
                 'id' => 568,
-                'name' => 'Sample Item 2',
-                'attributes' => array()
+                'name' => 'Sample Item 2'
             ),
             array(
                 'id' => 856,
-                'name' => 'Sample Item 3',
-                'attributes' => array()
+                'name' => 'Sample Item 3'
             ),
         );
 
@@ -101,13 +97,11 @@ class GroupTest extends PHPUnit\Framework\TestCase
         $items = array(
             array(
                 'id' => 456,
-                'name' => 'Sample Item 1',
-                'attributes' => array()
+                'name' => 'Sample Item 1'
             ),
             array(
                 'id' => 568,
-                'name' => 'Sample Item 2',
-                'attributes' => array()
+                'name' => 'Sample Item 2'
             ),
         );
 
@@ -131,8 +125,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Sample Item',
-            'attributes' => array()
+            'name' => 'Sample Item'
         );
 
         $this->cart->addGroup($group);
@@ -144,9 +137,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(
-                'group_id' => 1
-            )
+            'group_id' => 1
         );
 
         $this->cart->add($item);
@@ -164,9 +155,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(
-                'group_id' => 1
-            )
+            'group_id' => 1
         );
 
         $this->cart->add($item);
@@ -176,8 +165,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Sample Group',
-            'attributes' => array()
+            'name' => 'Sample Group'
         );
 
         $this->cart->addGroup($group);
@@ -188,25 +176,20 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
                 'quantity' => 1,
-                'attributes' => array()
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
         );
 
@@ -222,7 +205,6 @@ class GroupTest extends PHPUnit\Framework\TestCase
         $group = array(
             'id' => 1,
             'name' => 'Sample Group',
-            'attributes' => array()
         );
 
         $this->cart->addGroup($group);
@@ -233,25 +215,20 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
                 'quantity' => 1,
-                'attributes' => array()
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
         );
 
@@ -270,8 +247,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Sample Group',
-            'attributes' => array()
+            'name' => 'Sample Group'
         );
 
         $this->cart->addGroup($group);
@@ -282,25 +258,20 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
         );
 
@@ -319,8 +290,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Sample Group',
-            'attributes' => array()
+            'name' => 'Sample Group'
         );
 
         $this->cart->addGroup($group);
@@ -331,18 +301,14 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
         );
 
@@ -355,9 +321,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             )
         );
 
@@ -368,8 +332,7 @@ class GroupTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Sample Group',
-            'attributes' => array()
+            'name' => 'Sample Group'
         );
 
         $this->cart->addGroup($group);
@@ -379,15 +342,13 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'id' => 456,
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
-                'quantity' => 3,
-                'attributes' => array()
+                'quantity' => 3
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
         );
 
@@ -436,25 +397,20 @@ class GroupTest extends PHPUnit\Framework\TestCase
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
                 'quantity' => 1,
-                'attributes' => array(
-                    'group_id' => 1
-                )
+                'group_id' => 1
             ),
         );
 

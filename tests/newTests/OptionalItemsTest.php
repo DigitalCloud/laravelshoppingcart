@@ -49,8 +49,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -59,9 +58,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
             'name' => 'Mandrill',
             'price' => 124.99,
             'quantity' => 1,
-            'attributes' => array(
-                'group_id' => 1
-            )
+            'group_id' => 1
         );
 
         $this->cart->add($items);
@@ -81,8 +78,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -93,19 +89,15 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 )
             );
 
@@ -126,8 +118,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -138,29 +129,23 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 )
             );
 
@@ -181,8 +166,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -193,29 +177,23 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    ),
+                    'group_id' => 1,
+                    'is_optional' => true,
                     'conditions' => new \Darryldecode\Cart\CartCondition([
                         'name' => 'discount',
                         'value' => '-5',
@@ -241,8 +219,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -253,29 +230,23 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    ),
+                    'group_id' => 1,
+                    'is_optional' => true,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -308,8 +279,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -320,9 +290,7 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 2,
-                    'attributes' => array(
-                        'group_id' => 1
-                    ),
+                    'group_id' => 1,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -336,20 +304,16 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 3,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'is_optional' => true
-                    ),
+                    'group_id' => 1,
+                    'is_optional' => true,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -418,16 +382,13 @@ class OptionalItemsTest extends PHPUnit\Framework\TestCase
                 'name' => 'Website',
                 'price' => 212.5,
                 'quantity' => 1,
-                'attributes' => array(
-                    "is_optional" => true
-                )
+                "is_optional" => true
             ),
             array(
                 'id' => 3,
                 'name' => 'Mandrill',
                 'price' => 124.99,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             )
         );
 

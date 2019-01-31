@@ -62,9 +62,7 @@ class DependentItemsTest extends PHPUnit\Framework\TestCase
                 'name' => 'Mandrill',
                 'price' => 124.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'dependent_id' => 99
-                )
+                'dependent_id' => 99
             )
         );
 
@@ -85,9 +83,7 @@ class DependentItemsTest extends PHPUnit\Framework\TestCase
                 'name' => 'Mandrill',
                 'price' => 124.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    'dependent_id' => 2
-                )
+                'dependent_id' => 2
             )
         );
 

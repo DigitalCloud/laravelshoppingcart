@@ -81,7 +81,7 @@ class ItemCollection extends Collection
 
     public function hasAlternatives()
     {
-        if (isset($this['attributes']['alternative_id'])) {
+        if (isset($this['alternative_id']) && $this['alternative_id']) {
             return true;
         }
 
@@ -129,7 +129,7 @@ class ItemCollection extends Collection
 
     public function inGroup()
     {
-        if (isset($this['attributes']['group_id'])) return true;
+        if (isset($this['group_id']) && $this['group_id']) return true;
 
         return false;
     }
@@ -184,6 +184,6 @@ class ItemCollection extends Collection
 
     public function isOption()
     {
-        return $this->attributes->is_optional;
+        return $this->is_optional;
     }
 }

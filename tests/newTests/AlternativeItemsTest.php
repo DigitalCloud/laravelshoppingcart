@@ -13,7 +13,6 @@ require_once __DIR__ . '/../helpers/SessionMock.php';
 
 class AlternativeItemsTest extends PHPUnit\Framework\TestCase
 {
-
     /**
      * @var Darryldecode\Cart\Cart
      */
@@ -49,8 +48,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -62,30 +60,24 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'SendGrid',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 ),
                 array(
                     'id' => 4,
                     'name' => 'MailTrap',
                     'price' => 0,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 )
             );
 
@@ -106,8 +98,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -119,29 +110,23 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 79.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    ),
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id,
                     'conditions' => new \Darryldecode\Cart\CartCondition([
                         'name' => 'discount',
                         'value' => '-5',
@@ -167,8 +152,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -180,29 +164,23 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1
-                    )
+                    'group_id' => 1
                 ),
                 array(
                     'id' => 2,
                     'name' => 'Mandrill',
                     'price' => 50.12,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    ),
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -235,8 +213,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -248,9 +225,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 2,
-                    'attributes' => array(
-                        'group_id' => 1
-                    ),
+                    'group_id' => 1,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -264,20 +239,16 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Mandrill',
                     'price' => 50,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    )
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 3,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id
-                    ),
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -335,8 +306,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
     {
         $group = array(
             'id' => 1,
-            'name' => 'Group',
-            'attributes' => array()
+            'name' => 'Group'
         );
         $this->cart->addGroup($group);
 
@@ -348,9 +318,7 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Website',
                     'price' => 124.99,
                     'quantity' => 2,
-                    'attributes' => array(
-                        'group_id' => 1
-                    ),
+                    'group_id' => 1,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -364,22 +332,18 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                     'name' => 'Mandrill',
                     'price' => 50,
                     'quantity' => 1,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id,
-                        'is_optional' => true
-                    )
+                    'group_id' => 1,
+                    'is_optional' => true,
+                    'alternative_id' => $alternative_id,
                 ),
                 array(
                     'id' => 4,
                     'name' => 'backup',
                     'price' => 51,
                     'quantity' => 3,
-                    'attributes' => array(
-                        'group_id' => 1,
-                        'alternative_id' => $alternative_id,
-                        'is_optional' => true
-                    ),
+                    'group_id' => 1,
+                    'alternative_id' => $alternative_id,
+                    'is_optional' => true,
                     'conditions' => array(
                         new \Darryldecode\Cart\CartCondition([
                             'name' => 'discount',
@@ -449,29 +413,23 @@ class AlternativeItemsTest extends PHPUnit\Framework\TestCase
                 'name' => 'Website',
                 'price' => 212.5,
                 'quantity' => 1,
-                'attributes' => [
-                    'group_id' => 1
-                ]
+                'group_id' => 1
             ),
             array(
                 'id' => 2,
                 'name' => 'SendGrid',
                 'price' => 48.15,
                 'quantity' => 1,
-                'attributes' => array(
-                    "alternative_id" => $alternative,
-                    'group_id' => 1
-                )
+                'group_id' => 1,
+                "alternative_id" => $alternative,
             ),
             array(
                 'id' => 3,
                 'name' => 'Mandrill',
                 'price' => 124.99,
                 'quantity' => 1,
-                'attributes' => array(
-                    "alternative_id" => $alternative,
-                    'group_id' => 1
-                )
+                'group_id' => 1,
+                "alternative_id" => $alternative,
             )
         );
 

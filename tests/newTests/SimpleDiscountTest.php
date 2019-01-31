@@ -155,22 +155,19 @@ class SimpleDiscountTest extends PHPUnit\Framework\TestCase
                 'id' => 1,
                 'name' => 'Website',
                 'price' => 212.5,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
             array(
                 'id' => 2,
                 'name' => 'Marketing Campaign',
                 'price' => 69.25,
-                'quantity' => 2,
-                'attributes' => array()
+                'quantity' => 2
             ),
             array(
                 'id' => 3,
                 'name' => 'Mobile App',
                 'price' => 50.25,
-                'quantity' => 3,
-                'attributes' => array()
+                'quantity' => 3
             ),
         );
 

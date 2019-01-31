@@ -157,7 +157,9 @@ class Cart
      * @throws InvalidGroup
      * @throws InvalidItemException
      */
-    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(), $taxes = array(), $unit = null, $quantities = [])
+    public function add($id, $name = null, $price = null, $quantity = null, $attributes = array(), $conditions = array(),
+                        $taxes = array(), $unit = null, $quantities = [], $alternative_id = null, $is_optional = false,
+                        $group_id = null, $dependent_id = null)
     {
         // if the first argument is an array,
         // we will need to call add again
@@ -175,7 +177,11 @@ class Cart
                         Helpers::issetAndHasValueOrAssignDefault($item['conditions'], array()),
                         Helpers::issetAndHasValueOrAssignDefault($item['taxes'], array()),
                         $item['unit'] ?? null,
-                        $item['quantities'] ?? []
+                        $item['quantities'] ?? [],
+                        $item['alternative_id'] ?? null,
+                        $item['is_optional'] ?? null,
+                        $item['group_id'] ?? null,
+                        $item['dependent_id'] ?? null
                     );
                 }
             } else {
@@ -188,7 +194,11 @@ class Cart
                     Helpers::issetAndHasValueOrAssignDefault($id['conditions'], array()),
                     Helpers::issetAndHasValueOrAssignDefault($id['taxes'], array()),
                     $id['unit'] ?? null,
-                    $id['quantities'] ?? []
+                    $id['quantities'] ?? [],
+                    $id['alternative_id'] ?? null,
+                    $id['is_optional'] ?? null,
+                    $id['group_id'] ?? null,
+                    $id['dependent_id'] ?? null
                 );
             }
 
@@ -205,7 +215,11 @@ class Cart
             'conditions' => $conditions,
             'taxes' => $taxes,
             'unit' => $unit,
-            'quantities' => collect($quantities)
+            'quantities' => collect($quantities),
+            'alternative_id' => $alternative_id,
+            'is_optional' => $is_optional,
+            'group_id' => $group_id,
+            'dependent_id' => $dependent_id
         ));
 
         if ($quantities) list($item['quantity'], $item['unit']) = $this->recalculateQuantity($item['quantities']);
@@ -909,7 +923,7 @@ class Cart
 
                 // add all sub items on $groups to discard it
                 $subItems = $this->subItems($group);
-                $groups=$groups->concat($subItems->pluck('id')->toArray());
+                $groups = $groups->concat($subItems->pluck('id')->toArray());
                 // return the max value of function getGroupSubTotal()
                 return $this->getGroupSubTotal($group->id)->get('max');
             }
@@ -942,7 +956,7 @@ class Cart
 
                 // add all sub items on $groups to discard it
                 $subItems = $this->subItems($group);
-                $groups=$groups->concat($subItems->pluck('id')->toArray());
+                $groups = $groups->concat($subItems->pluck('id')->toArray());
 
                 // return the max value of function getGroupSubTotal()
                 return $this->getGroupSubTotal($group->id)->get('min');
@@ -1033,7 +1047,7 @@ class Cart
     public function getGroupSubTotal($id, $formatted = true)
     {
         $cart = $this->getContent()->filter(function ($value, $key) use ($id) {
-            return $value->attributes->group_id == $id;
+            return $value->group_id == $id;
         });
 
         $items = collect([]);
@@ -1077,6 +1091,9 @@ class Cart
             return $minItemPrice->getPriceSumWithConditions(false);
         });
 
+//        print_r($max);
+        //print_r($min);
+        //die();
         // get the conditions that are meant to be applied
         // on the subtotal and apply it here before returning the subtotal
         $group = $this->get($id);
@@ -1216,13 +1233,13 @@ class Cart
     {
         if (!$item->inGroup()) return null;
 
-        return $this->getContent()->get($item['attributes']['group_id']);
+        return $this->getContent()->get($item['group_id']);
     }
 
     public function subItems($group)
     {
         return $this->getContent()->filter(function ($value, $key) use ($group) {
-            return $value->inGroup() && $value['attributes']['group_id'] == $group->id;
+            return $value->inGroup() && $value['group_id'] == $group->id;
         });
     }
 
@@ -1230,7 +1247,7 @@ class Cart
     {
         if ($item->hasAlternatives()) {
             return $this->getContent()->filter(function ($value, $key) use ($item) {
-                return $value->hasAlternatives() && $value->attributes->alternative_id == $item->attributes->alternative_id;
+                return $value->hasAlternatives() && $value->alternative_id == $item->alternative_id;
             });
         }
         return collect([]);
@@ -1261,7 +1278,6 @@ class Cart
      */
     protected function validate($item)
     {
-        $item['attributes'] = $item['attributes']->toArray();
         $item['quantities'] = $item['quantities']->toArray();
         $group_ids = $this->getContent()->filter(function ($value, $key) {
             return !$value->quantity;
@@ -1276,21 +1292,20 @@ class Cart
             'price' => 'required|numeric',
             'quantity' => 'nullable|required_without:quantities|numeric|min:1',
             'name' => 'required',
-            'attributes.group_id' => 'nullable|in:' . implode(',', $group_ids),
-            'attributes.dependent_id' => 'nullable|in:' . implode(',', $dependent_ids),
+            'group_id' => 'nullable|in:' . implode(',', $group_ids),
+            'dependent_id' => 'nullable|in:' . implode(',', $dependent_ids),
             'quantities' => 'nullable|array',
             'quantities.*.quantity' => 'required|numeric|min:1'
         );
 
         $validator = CartItemValidator::make($item, $rules);
 
-        $item['attributes'] = new ItemAttributeCollection($item['attributes']);
         $item['quantities'] = collect($item['quantities']);
         if ($validator->fails()) {
-            if ($validator->errors()->get('attributes.group_id'))
+            if ($validator->errors()->get('group_id'))
                 throw new InvalidGroup($validator->messages()->first());
 
-            if ($validator->errors()->get('attributes.dependent_id'))
+            if ($validator->errors()->get('dependent_id'))
                 throw new InvalidDependent($validator->messages()->first());
             throw new InvalidItemException($validator->messages()->first());
         }

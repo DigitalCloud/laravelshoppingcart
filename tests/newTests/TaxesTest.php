@@ -233,7 +233,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'taxes' => $tax1
         );
 
@@ -261,7 +260,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'conditions' => [$tax1, $tax2]
         );
 
@@ -289,7 +287,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'taxes' => [$tax1]
         );
 
@@ -324,7 +321,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -360,7 +356,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -396,7 +391,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'taxes' => [$tax1, $tax2]
         );
 
@@ -427,7 +421,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'taxes' => $tax1 // <--not in array format
         );
 
@@ -461,7 +454,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
             'taxes' => [$tax1, $tax2]
         );
 
@@ -501,7 +493,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -538,7 +529,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -587,7 +577,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -634,7 +623,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -660,8 +648,7 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'id' => 456,
             'name' => 'Sample Item 1',
             'price' => 100,
-            'quantity' => 1,
-            'attributes' => array(),
+            'quantity' => 1
         );
 
         $this->cart->add($item);
@@ -697,7 +684,6 @@ class TaxesTest extends PHPUnit\Framework\TestCase
             'name' => 'Sample Item 1',
             'price' => 100,
             'quantity' => 1,
-            'attributes' => array(),
         );
 
         $this->cart->add($item);
@@ -816,22 +802,19 @@ class TaxesTest extends PHPUnit\Framework\TestCase
                 'id' => 456,
                 'name' => 'Sample Item 1',
                 'price' => 67.99,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
             array(
                 'id' => 568,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
             array(
                 'id' => 856,
                 'name' => 'Sample Item 3',
                 'price' => 50.25,
-                'quantity' => 1,
-                'attributes' => array()
+                'quantity' => 1
             ),
         );
 
