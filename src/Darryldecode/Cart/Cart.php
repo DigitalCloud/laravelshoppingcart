@@ -1502,6 +1502,12 @@ class Cart
         return $item;
     }
 
+    public function fromJson($data)
+    {
+        $this->clear();
+        $this->add(json_decode($data,true));
+    }
+
     /**
      * Setter for decimals. Change value on demand.
      * @param $decimals
